@@ -113,9 +113,7 @@ import { QuickCommandI18nService } from './qc-i18n.service'
                 <span class="qc-cmd-badge" *ngIf="cmd.params && cmd.params.length > 0" [title]="i18n.t('panel.param_hint')">{{ getParamBadge(cmd) }}</span>
                 <span class="qc-cmd-shortcut-badge" *ngIf="cmd.shortcut">{{ cmd.shortcut }}</span>
                 <div class="qc-cmd-actions">
-                  <span class="qc-cmd-act" (click)="togglePin(cmd); $event.stopPropagation()"
-                    [title]="cmd.pinned ? i18n.t('panel.unpin') : i18n.t('panel.pin')"
-                    [class.active]="cmd.pinned">&#x2691;</span>
+                  <span class="qc-cmd-act" (click)="copyCommandText(cmd); $event.stopPropagation()" [title]="i18n.t('panel.copy')">&#x2750;</span>
                   <span class="qc-cmd-act" (click)="editCommand(cmd); $event.stopPropagation()" [title]="i18n.t('panel.edit')">&#x270E;</span>
                   <span class="qc-cmd-act" (click)="sendToLine(cmd); $event.stopPropagation()" [title]="i18n.t('panel.send_to_line')">&#x21E7;</span>
                   <span class="qc-cmd-act qc-cmd-act-run" (click)="executeAlways(cmd); $event.stopPropagation()" [title]="i18n.t('panel.send_and_exec')">&#x23CE;</span>
@@ -1446,10 +1444,10 @@ export class QuickCommandFloatingPanel implements OnInit, OnDestroy {
     }, 50)
   }
 
-  togglePin(cmd: QuickCommand): void {
-    this.svc.update(cmd.id, { pinned: !cmd.pinned })
-    cmd.pinned = !cmd.pinned
-    this.loadData()
+  copyCommandText(cmd: QuickCommand): void {
+    const steps = resolveSteps(cmd)
+    const text = steps.length > 0 ? steps[0].text : cmd.text
+    try { navigator.clipboard?.writeText(text) } catch {}
   }
 
   onResetUsage(): void {
