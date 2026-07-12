@@ -98,8 +98,9 @@ export class QuickCmdStartPageButtonProvider extends ToolbarButtonProvider {
 
   provide(): ToolbarButton[] {
     return [{
-      title: 'QuickCmd+',
-      weight: 8,
+      icon: '<svg viewBox="0 0 24 24" fill="currentColor"><text x="2" y="19" font-size="20" font-family="monospace" font-weight="bold">&gt;_</text></svg>',
+      title: 'QuickCmd-Plus',
+      weight: 9,
       showInStartPage: true,
       click: () => {
         QuickCommandTerminalDecorator.openStandalonePanel(this.injector)
