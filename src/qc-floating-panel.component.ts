@@ -212,12 +212,12 @@ import { QuickCommandI18nService } from './qc-i18n.service'
 
         <div class="qc-field">
           <label class="qc-field-label">{{ i18n.t('settings.group') }}</label>
-          <select class="qc-field-input" [(ngModel)]="editCmd.group">
-            <option value="">{{ i18n.t('app.ungrouped') }}</option>
-            <ng-container *ngFor="let g of allGroups">
-              <option *ngIf="g.name" [value]="g.name">{{ g.name }}</option>
-            </ng-container>
-          </select>
+          <div class="qc-filter-dropdown" [class.open]="showEditGroupDropdown">
+            <div class="qc-filter-trigger" #editGroupTrigger (click)="toggleEditGroupDropdown(editGroupTrigger); $event.stopPropagation()">
+              <span class="qc-filter-label">{{ editCmd.group || i18n.t('app.ungrouped') }}</span>
+              <span class="qc-filter-arrow">{{ showEditGroupDropdown ? '&#x25B2;' : '&#x25BC;' }}</span>
+            </div>
+          </div>
         </div>
         <div class="qc-check-row">
           <label class="qc-check"><input type="checkbox" [(ngModel)]="editCmd.appendCR"><span>{{ i18n.t('settings.append_cr') }}</span></label>
@@ -231,6 +231,22 @@ import { QuickCommandI18nService } from './qc-i18n.service'
       <div class="qc-modal-footer">
         <button class="qc-btn qc-btn-ghost" (click)="closeEditModal()">{{ i18n.t('settings.cancel') }}</button>
         <button class="qc-btn qc-btn-primary" (click)="saveEditCmd()">{{ i18n.t('settings.save') }}</button>
+      </div>
+    </div>
+
+    <!-- 编辑弹窗 — 分组下拉菜单 -->
+    <div class="qc-filter-backdrop" *ngIf="showEditGroupDropdown" (click)="showEditGroupDropdown = false; $event.stopPropagation()" (mousedown)="$event.stopPropagation()"></div>
+    <div class="qc-filter-menu" *ngIf="showEditGroupDropdown" (mousedown)="$event.stopPropagation()"
+      [style.left.px]="editGroupMenuX" [style.top.px]="editGroupMenuY">
+      <div class="qc-filter-option" [class.active]="!editCmd.group"
+        (click)="editCmd.group = ''; showEditGroupDropdown = false">
+        <span class="qc-filter-opt-icon">&#x1F4C4;</span> {{ i18n.t('app.ungrouped') }}
+      </div>
+      <div class="qc-filter-opt-divider" *ngIf="allGroups.length > 0"></div>
+      <div class="qc-filter-option" *ngFor="let g of allGroups"
+        [class.active]="editCmd.group === g.name"
+        (click)="editCmd.group = g.name; showEditGroupDropdown = false">
+        <span class="qc-filter-opt-icon">&#x1F4C1;</span> {{ g.name }}
       </div>
     </div>
 
@@ -986,6 +1002,9 @@ export class QuickCommandFloatingPanel implements OnInit, OnDestroy {
   showGroupDropdown = false
   filterMenuX = 0
   filterMenuY = 0
+  showEditGroupDropdown = false
+  editGroupMenuX = 0
+  editGroupMenuY = 0
   highlightedId = ''
 
   commands: QuickCommand[] = []
@@ -1112,6 +1131,15 @@ export class QuickCommandFloatingPanel implements OnInit, OnDestroy {
     this.filterMenuX = rect.left
     this.filterMenuY = rect.bottom + 4
     this.showGroupDropdown = true
+  }
+
+  /** 编辑弹窗内分组下拉 */
+  toggleEditGroupDropdown(triggerEl: HTMLElement): void {
+    if (this.showEditGroupDropdown) { this.showEditGroupDropdown = false; return }
+    const rect = triggerEl.getBoundingClientRect()
+    this.editGroupMenuX = rect.left
+    this.editGroupMenuY = rect.bottom + 4
+    this.showEditGroupDropdown = true
   }
 
   onSearch(): void {
@@ -1511,7 +1539,7 @@ export class QuickCommandFloatingPanel implements OnInit, OnDestroy {
     this.showEditModal = false; this.searchText = ''; this.loadData()
   }
 
-  closeEditModal(): void { this.showEditModal = false }
+  closeEditModal(): void { this.showEditModal = false; this.showEditGroupDropdown = false }
 
   getParamBadge(cmd: QuickCommand): string {
     const count = cmd.params?.length || 0
