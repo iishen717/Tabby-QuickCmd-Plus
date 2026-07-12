@@ -12,6 +12,17 @@ declare module 'tabby-core' {
     openNewTab(options: any): any
     closeTab(tab: any): void
   }
+  export interface ToolbarButton {
+    icon?: string
+    title: string
+    weight?: number
+    click?: () => void
+    showInStartPage?: boolean
+    showInToolbar?: boolean
+  }
+  export abstract class ToolbarButtonProvider {
+    abstract provide(): ToolbarButton[]
+  }
   export class NotificationsService {
     error(title: string, message: string): void
     notice(title: string, message?: string): void

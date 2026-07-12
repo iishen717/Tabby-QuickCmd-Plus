@@ -9,7 +9,7 @@
  */
 import { CommonModule } from '@angular/common'
 import { FormsModule } from '@angular/forms'
-import { NgModule } from '@angular/core'
+import { NgModule, Injectable, Injector } from '@angular/core'
 import TabbyCoreModule from 'tabby-core'
 import { SettingsTabProvider } from 'tabby-settings'
 import { TerminalDecorator } from 'tabby-terminal'
@@ -17,6 +17,7 @@ import { TerminalDecorator } from 'tabby-terminal'
 import { QuickCommandTerminalDecorator } from './qc-terminal-decorator'
 import { QuickCommandFloatingPanel } from './qc-floating-panel.component'
 import { QuickCommandSettingsTabProvider, QuickCommandSettingsComponent } from './qc-settings.component'
+import { ToolbarButtonProvider, ToolbarButton } from 'tabby-core'
 
 /** 启动时应用已保存的颜色主题 */
 function applySavedTheme(): void {
@@ -88,6 +89,25 @@ function applySavedTheme(): void {
 }
 applySavedTheme()
 
+/** 在 Tabby 首页显示 QuickCmd+ 入口按钮，点击直接弹出独立面板 */
+@Injectable()
+export class QuickCmdStartPageButtonProvider extends ToolbarButtonProvider {
+  constructor(private injector: Injector) {
+    super()
+  }
+
+  provide(): ToolbarButton[] {
+    return [{
+      title: 'QuickCmd+',
+      weight: 8,
+      showInStartPage: true,
+      click: () => {
+        QuickCommandTerminalDecorator.openStandalonePanel(this.injector)
+      },
+    }]
+  }
+}
+
 @NgModule({
   imports: [
     CommonModule,
@@ -101,6 +121,7 @@ applySavedTheme()
   providers: [
     { provide: TerminalDecorator, useClass: QuickCommandTerminalDecorator, multi: true },
     { provide: SettingsTabProvider, useClass: QuickCommandSettingsTabProvider, multi: true },
+    { provide: ToolbarButtonProvider, useClass: QuickCmdStartPageButtonProvider, multi: true },
   ],
 })
 export default class QuickCommandPlusModule {

@@ -512,6 +512,62 @@ export class QuickCommandTerminalDecorator extends TerminalDecorator {
       }
     }
   }
+
+  /** 静态方法：在无终端的情况下独立弹出快捷命令面板（用于首页按钮） */
+  static openStandalonePanel(injector: Injector): void {
+    if (document.querySelector('[data-qc-standalone]')) return
+
+    const resolver = injector.get(ComponentFactoryResolver)
+    const appRef = injector.get(ApplicationRef)
+    const zone = injector.get(NgZone)
+
+    zone.run(() => {
+      try {
+        const backdrop = document.createElement('div')
+        backdrop.setAttribute('data-qc-standalone', 'backdrop')
+        backdrop.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,0.35);'
+        backdrop.addEventListener('click', () => {
+          QuickCommandTerminalDecorator.closeStandalonePanel()
+        })
+        document.body.appendChild(backdrop)
+
+        const panelHost = document.createElement('div')
+        panelHost.setAttribute('data-qc-standalone', 'panel')
+        panelHost.style.cssText = 'position:fixed;z-index:99999;'
+        document.body.appendChild(panelHost)
+
+        const factory = resolver.resolveComponentFactory(QuickCommandFloatingPanel)
+        const cmpRef = factory.create(injector, [], panelHost)
+        const cmp = cmpRef.instance
+
+        cmp.panelX = Math.round((window.innerWidth - 340) / 2)
+        cmp.panelY = Math.round((window.innerHeight - 420) / 2)
+        cmp.terminalRef = null
+        cmp.profileId = ''
+
+        cmp.onClose = () => {
+          QuickCommandTerminalDecorator.closeStandalonePanel()
+        }
+
+        appRef.attachView(cmpRef.hostView)
+        cmpRef.changeDetectorRef.detectChanges()
+
+        panelHost.addEventListener('mousedown', (ev: MouseEvent) => ev.stopPropagation())
+        panelHost.addEventListener('click', (ev: MouseEvent) => ev.stopPropagation())
+
+        console.log('[QC+] Standalone panel opened')
+      } catch (e) {
+        console.error('[QC+] Standalone panel error', e)
+      }
+    })
+  }
+
+  static closeStandalonePanel(): void {
+    try {
+      document.querySelectorAll('[data-qc-standalone="backdrop"]').forEach(b => b.remove())
+      document.querySelectorAll('[data-qc-standalone="panel"]').forEach(p => p.remove())
+    } catch {}
+  }
 }
 
 /* 全局回调：由设置面板 onEntryModeChange 触发重建 */
