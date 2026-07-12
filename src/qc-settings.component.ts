@@ -373,15 +373,31 @@ export class QuickCommandSettingsComponent {
     return ''
   })()
 
-  // 毛玻璃配色预设
+  /*
+   * 毛玻璃配色预设 — 字段说明
+   * ───────────────────────────────────────────
+   * bg / bgRgb         面板整体背景（rgba 半透明实现毛玻璃）/ 对应 RGB 分量
+   * text                主文字颜色（命令名、标题等）
+   * textSecondary       次要文字颜色（搜索框文字、命令预览等）
+   * textMuted           辅助文字颜色（图标、提示、占位符等）
+   * groupName           分组夹名称颜色
+   * primary / primaryRgb 主色调（按钮、链接、选中态、快速入口边框）/ 对应 RGB 分量
+   * surface / surfaceRgb 标题栏 / 卡片 / 元素背景色 / 对应 RGB 分量
+   * border              边框颜色（面板、输入框、分隔线等）
+   * inputBg             输入框背景色（搜索框、编辑弹窗输入框等）
+   * hover               悬停高亮背景色
+   * blur                毛玻璃模糊程度（blur 值）
+   * saturate            毛玻璃饱和度（saturate 值）
+   * shadow              面板整体阴影
+   */
   colorThemes = [
-    { value: 'acrylic-light', label: '毛玻璃·浅', bg: 'rgba(252,252,252,0.56)', bgRgb: '252,252,252', text: '#162234', textSecondary: '#607188', textMuted: '#8c97ab', groupName: '#4a6080', primary: '#4f7dff', primaryRgb: '79,125,255', surface: 'rgba(255,255,255,0.34)', surfaceRgb: '255,255,255', border: 'rgba(255,255,255,0.28)', inputBg: 'rgba(255,255,255,0.52)', hover: 'rgba(255,255,255,0.24)', blur: '28px', saturate: '180%', shadow: '0 10px 38px rgba(0,0,0,0.16)' },
-    { value: 'acrylic-dark', label: '毛玻璃·深',  bg: 'rgba(20,20,20,0.52)', bgRgb: '20,20,20', text: '#e8e8e8', textSecondary: '#b2b2b2', textMuted: '#8f8f8f', groupName: '#b2b2b2', primary: '#5b8def', primaryRgb: '91,141,239', surface: 'rgba(45,45,45,0.42)', surfaceRgb: '45,45,45', border: 'rgba(255,255,255,0.10)', inputBg: 'rgba(255,255,255,0.08)', hover: 'rgba(255,255,255,0.06)', blur: '30px', saturate: '145%', shadow: '0 10px 38px rgba(0,0,0,0.40)' },
-    { value: 'ocean',  label: '海洋蓝',   bg: 'rgba(8,24,48,0.60)', bgRgb: '8,24,48', text: '#e0f0ff', textSecondary: '#90b8e0', textMuted: '#5888b8', groupName: '#90b8e0', primary: '#22d3ee', primaryRgb: '34,211,238', surface: 'rgba(20,50,90,0.35)', surfaceRgb: '20,50,90', border: 'rgba(100,180,240,0.14)', inputBg: 'rgba(10,30,60,0.50)', hover: 'rgba(100,160,220,0.08)', blur: '26px', saturate: '170%', shadow: '0 10px 38px rgba(0,40,80,0.40)' },
-    { value: 'forest', label: '森林绿',   bg: 'rgba(8,28,16,0.58)', bgRgb: '8,28,16', text: '#d8f8e0', textSecondary: '#80c898', textMuted: '#509868', groupName: '#80c898', primary: '#34d399', primaryRgb: '52,211,153', surface: 'rgba(16,50,28,0.35)', surfaceRgb: '16,50,28', border: 'rgba(80,180,120,0.12)', inputBg: 'rgba(8,30,16,0.48)', hover: 'rgba(80,160,100,0.08)', blur: '26px', saturate: '155%', shadow: '0 10px 38px rgba(0,30,10,0.40)' },
-    { value: 'sunset', label: '日落橙',   bg: 'rgba(40,16,8,0.62)', bgRgb: '40,16,8', text: '#ffe8d8', textSecondary: '#d0a088', textMuted: '#a07058', groupName: '#d0a088', primary: '#fb923c', primaryRgb: '251,146,60', surface: 'rgba(60,24,12,0.38)', surfaceRgb: '60,24,12', border: 'rgba(200,120,80,0.14)', inputBg: 'rgba(30,10,4,0.50)', hover: 'rgba(200,100,60,0.08)', blur: '24px', saturate: '150%', shadow: '0 10px 38px rgba(40,10,0,0.40)' },
+    { value: 'acrylic-light', label: '毛玻璃·浅', bg: 'rgba(213,213,216,0.96)', bgRgb: '213,213,216', text: '#162234', textSecondary: '#939aa7', textMuted: '#8c97ab', groupName: '#1a2233', primary: '#4f7dff', primaryRgb: '79,125,255', surface: 'rgba(255,255,255,0.34)', surfaceRgb: '255,255,255', border: 'rgba(255,255,255,0.28)', inputBg: 'rgba(255,255,255,0.52)', hover: 'rgba(255,255,255,0.24)', blur: '28px', saturate: '180%', shadow: '0 10px 38px rgba(0,0,0,0.16)' },
+    { value: 'acrylic-dark', label: '毛玻璃·深', bg: 'rgba(20,20,20,0.52)', bgRgb: '20,20,20', text: '#e8e8e8', textSecondary: '#b2b2b2', textMuted: '#8f8f8f', groupName: '#b2b2b2', primary: '#5b8def', primaryRgb: '91,141,239', surface: 'rgba(45,45,45,0.42)', surfaceRgb: '45,45,45', border: 'rgba(255,255,255,0.10)', inputBg: 'rgba(255,255,255,0.08)', hover: 'rgba(255,255,255,0.06)', blur: '30px', saturate: '145%', shadow: '0 10px 38px rgba(0,0,0,0.40)' },
+    { value: 'ocean', label: '海洋蓝', bg: 'rgba(8,24,48,0.60)', bgRgb: '8,24,48', text: '#e0f0ff', textSecondary: '#90b8e0', textMuted: '#5888b8', groupName: '#90b8e0', primary: '#22d3ee', primaryRgb: '34,211,238', surface: 'rgba(20,50,90,0.35)', surfaceRgb: '20,50,90', border: 'rgba(100,180,240,0.14)', inputBg: 'rgba(10,30,60,0.50)', hover: 'rgba(100,160,220,0.08)', blur: '26px', saturate: '170%', shadow: '0 10px 38px rgba(0,40,80,0.40)' },
+    { value: 'forest', label: '森林绿', bg: 'rgba(8,28,16,0.58)', bgRgb: '8,28,16', text: '#d8f8e0', textSecondary: '#80c898', textMuted: '#509868', groupName: '#80c898', primary: '#34d399', primaryRgb: '52,211,153', surface: 'rgba(16,50,28,0.35)', surfaceRgb: '16,50,28', border: 'rgba(80,180,120,0.12)', inputBg: 'rgba(8,30,16,0.48)', hover: 'rgba(80,160,100,0.08)', blur: '26px', saturate: '155%', shadow: '0 10px 38px rgba(0,30,10,0.40)' },
+    { value: 'sunset', label: '日落橙', bg: 'rgba(40,16,8,0.62)', bgRgb: '40,16,8', text: '#ffe8d8', textSecondary: '#d0a088', textMuted: '#a07058', groupName: '#d0a088', primary: '#fb923c', primaryRgb: '251,146,60', surface: 'rgba(60,24,12,0.38)', surfaceRgb: '60,24,12', border: 'rgba(200,120,80,0.14)', inputBg: 'rgba(30,10,4,0.50)', hover: 'rgba(200,100,60,0.08)', blur: '24px', saturate: '150%', shadow: '0 10px 38px rgba(40,10,0,0.40)' },
     { value: 'lavender', label: '薰衣草紫', bg: 'rgba(22,14,36,0.58)', bgRgb: '22,14,36', text: '#ece0fc', textSecondary: '#b098d0', textMuted: '#7a60a8', groupName: '#b098d0', primary: '#a78bfa', primaryRgb: '167,139,250', surface: 'rgba(36,22,58,0.38)', surfaceRgb: '36,22,58', border: 'rgba(150,120,210,0.14)', inputBg: 'rgba(18,10,30,0.50)', hover: 'rgba(140,100,200,0.08)', blur: '28px', saturate: '160%', shadow: '0 10px 38px rgba(20,10,30,0.40)' },
-    { value: 'custom', label: '自定义',   bg: 'rgba(22,22,28,0.72)', bgRgb: '22,22,28', text: '#e8e8e8', textSecondary: '#b0b0b0', textMuted: '#7a7a8a', groupName: '#b0b0b0', primary: '#5b8def', primaryRgb: '91,141,239', surface: 'rgba(255,255,255,0.06)', surfaceRgb: '255,255,255', border: 'rgba(255,255,255,0.10)', inputBg: 'rgba(255,255,255,0.08)', hover: 'rgba(255,255,255,0.06)', blur: '24px', saturate: '160%', shadow: '0 8px 40px rgba(0,0,0,0.42)' },
+    { value: 'custom', label: '自定义', bg: 'rgba(22,22,28,0.72)', bgRgb: '22,22,28', text: '#e8e8e8', textSecondary: '#b0b0b0', textMuted: '#7a7a8a', groupName: '#b0b0b0', primary: '#5b8def', primaryRgb: '91,141,239', surface: 'rgba(255,255,255,0.06)', surfaceRgb: '255,255,255', border: 'rgba(255,255,255,0.10)', inputBg: 'rgba(255,255,255,0.08)', hover: 'rgba(255,255,255,0.06)', blur: '24px', saturate: '160%', shadow: '0 8px 40px rgba(0,0,0,0.42)' },
   ]
   colorTheme: string = localStorage.getItem('qc-plus-theme') || ''
   colorPrimary: string = localStorage.getItem('qc-plus-color-primary') || ''

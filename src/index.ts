@@ -24,9 +24,24 @@ function applySavedTheme(): void {
     const theme = localStorage.getItem('qc-plus-theme')
     const root = document.documentElement
 
-    // 预设主题色值（与 settings 组件保持一致；settings 打开时 setColorTheme 会再应用一次）
+    /*
+     * 预设主题色值（与 settings 组件保持一致；settings 打开时 setColorTheme 会再应用一次）
+     * --qc-bg / --qc-bg-rgb       面板整体背景 / RGB 分量
+     * --qc-text                    主文字颜色（命令名、标题等）
+     * --qc-text-secondary          次要文字颜色（搜索框文字、命令预览等）
+     * --qc-text-muted              辅助文字颜色（图标、提示、占位符等）
+     * --qc-group-name              分组夹名称颜色
+     * --qc-primary / --qc-primary-rgb 主色调（按钮、选中态、快速入口等）/ RGB 分量
+     * --qc-surface / --qc-surface-rgb 标题栏/卡片背景色 / RGB 分量
+     * --qc-border                  边框颜色
+     * --qc-input-bg                输入框背景色
+     * --qc-hover                   悬停高亮背景色
+     * --qc-blur                    毛玻璃模糊程度
+     * --qc-saturate                毛玻璃饱和度
+     * --qc-shadow                  面板整体阴影
+     */
     const presets: Record<string, Record<string, string>> = {
-      'acrylic-light': { '--qc-primary':'#4f7dff','--qc-primary-rgb':'79,125,255','--qc-bg':'rgba(252,252,252,0.56)','--qc-bg-rgb':'252,252,252','--qc-text':'#162234','--qc-text-secondary':'#607188','--qc-text-muted':'#8c97ab','--qc-group-name':'#4a6080','--qc-border':'rgba(255,255,255,0.28)','--qc-surface':'rgba(255,255,255,0.34)','--qc-surface-rgb':'255,255,255','--qc-hover':'rgba(255,255,255,0.24)','--qc-input-bg':'rgba(255,255,255,0.52)','--qc-blur':'28px','--qc-saturate':'180%','--qc-shadow':'0 10px 38px rgba(0,0,0,0.16)' },
+      'acrylic-light': { '--qc-primary':'#4f7dff','--qc-primary-rgb':'79,125,255','--qc-bg':'rgba(213,213,216,0.96)','--qc-bg-rgb':'213,213,216','--qc-text':'#162234','--qc-text-secondary':'#607188','--qc-text-muted':'#8c97ab','--qc-group-name':'#4a6080','--qc-border':'rgba(255,255,255,0.28)','--qc-surface':'rgba(255,255,255,0.34)','--qc-surface-rgb':'255,255,255','--qc-hover':'rgba(255,255,255,0.24)','--qc-input-bg':'rgba(255,255,255,0.52)','--qc-blur':'28px','--qc-saturate':'180%','--qc-shadow':'0 10px 38px rgba(0,0,0,0.16)' },
       'acrylic-dark':  { '--qc-primary':'#5b8def','--qc-primary-rgb':'91,141,239','--qc-bg':'rgba(20,20,20,0.52)','--qc-bg-rgb':'20,20,20','--qc-text':'#e8e8e8','--qc-text-secondary':'#b2b2b2','--qc-text-muted':'#8f8f8f','--qc-group-name':'#b2b2b2','--qc-border':'rgba(255,255,255,0.10)','--qc-surface':'rgba(45,45,45,0.42)','--qc-surface-rgb':'45,45,45','--qc-hover':'rgba(255,255,255,0.06)','--qc-input-bg':'rgba(255,255,255,0.08)','--qc-blur':'30px','--qc-saturate':'145%','--qc-shadow':'0 10px 38px rgba(0,0,0,0.40)' },
       'ocean':  { '--qc-primary':'#22d3ee','--qc-primary-rgb':'34,211,238','--qc-bg':'rgba(8,24,48,0.60)','--qc-bg-rgb':'8,24,48','--qc-text':'#e0f0ff','--qc-text-secondary':'#90b8e0','--qc-text-muted':'#5888b8','--qc-group-name':'#90b8e0','--qc-border':'rgba(100,180,240,0.14)','--qc-surface':'rgba(20,50,90,0.35)','--qc-surface-rgb':'20,50,90','--qc-hover':'rgba(100,160,220,0.08)','--qc-input-bg':'rgba(10,30,60,0.50)','--qc-blur':'26px','--qc-saturate':'170%','--qc-shadow':'0 10px 38px rgba(0,40,80,0.40)' },
       'forest': { '--qc-primary':'#34d399','--qc-primary-rgb':'52,211,153','--qc-bg':'rgba(8,28,16,0.58)','--qc-bg-rgb':'8,28,16','--qc-text':'#d8f8e0','--qc-text-secondary':'#80c898','--qc-text-muted':'#509868','--qc-group-name':'#80c898','--qc-border':'rgba(80,180,120,0.12)','--qc-surface':'rgba(16,50,28,0.35)','--qc-surface-rgb':'16,50,28','--qc-hover':'rgba(80,160,100,0.08)','--qc-input-bg':'rgba(8,30,16,0.48)','--qc-blur':'26px','--qc-saturate':'155%','--qc-shadow':'0 10px 38px rgba(0,30,10,0.40)' },
