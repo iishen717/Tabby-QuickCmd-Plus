@@ -595,17 +595,9 @@ export class QuickCommandSettingsComponent {
       return
     }
 
-    const presets: Record<string, any> = {
-      'acrylic-light': { primary: '#4f7dff', primaryRgb: '79,125,255', bg: 'rgba(252,252,252,0.56)', bgRgb: '252,252,252', text: '#162234', textSecondary: '#607188', textMuted: '#8c97ab', border: 'rgba(255,255,255,0.28)', surface: 'rgba(255,255,255,0.34)', surfaceRgb: '255,255,255', hover: 'rgba(255,255,255,0.24)', inputBg: 'rgba(255,255,255,0.52)', blur: '28px', saturate: '180%', shadow: '0 10px 38px rgba(0,0,0,0.16)' },
-      'acrylic-dark':  { primary: '#5b8def', primaryRgb: '91,141,239', bg: 'rgba(20,20,20,0.52)', bgRgb: '20,20,20', text: '#e8e8e8', textSecondary: '#b2b2b2', textMuted: '#8f8f8f', border: 'rgba(255,255,255,0.10)', surface: 'rgba(45,45,45,0.42)', surfaceRgb: '45,45,45', hover: 'rgba(255,255,255,0.06)', inputBg: 'rgba(255,255,255,0.08)', blur: '30px', saturate: '145%', shadow: '0 10px 38px rgba(0,0,0,0.40)' },
-      'ocean':  { primary: '#22d3ee', primaryRgb: '34,211,238', bg: 'rgba(8,24,48,0.60)', bgRgb: '8,24,48', text: '#e0f0ff', textSecondary: '#90b8e0', textMuted: '#5888b8', border: 'rgba(100,180,240,0.14)', surface: 'rgba(20,50,90,0.35)', surfaceRgb: '20,50,90', hover: 'rgba(100,160,220,0.08)', inputBg: 'rgba(10,30,60,0.50)', blur: '26px', saturate: '170%', shadow: '0 10px 38px rgba(0,40,80,0.40)' },
-      'forest': { primary: '#34d399', primaryRgb: '52,211,153', bg: 'rgba(8,28,16,0.58)', bgRgb: '8,28,16', text: '#d8f8e0', textSecondary: '#80c898', textMuted: '#509868', border: 'rgba(80,180,120,0.12)', surface: 'rgba(16,50,28,0.35)', surfaceRgb: '16,50,28', hover: 'rgba(80,160,100,0.08)', inputBg: 'rgba(8,30,16,0.48)', blur: '26px', saturate: '155%', shadow: '0 10px 38px rgba(0,30,10,0.40)' },
-      'sunset': { primary: '#fb923c', primaryRgb: '251,146,60', bg: 'rgba(40,16,8,0.62)', bgRgb: '40,16,8', text: '#ffe8d8', textSecondary: '#d0a088', textMuted: '#a07058', border: 'rgba(200,120,80,0.14)', surface: 'rgba(60,24,12,0.38)', surfaceRgb: '60,24,12', hover: 'rgba(200,100,60,0.08)', inputBg: 'rgba(30,10,4,0.50)', blur: '24px', saturate: '150%', shadow: '0 10px 38px rgba(40,10,0,0.40)' },
-      'lavender': { primary: '#a78bfa', primaryRgb: '167,139,250', bg: 'rgba(22,14,36,0.58)', bgRgb: '22,14,36', text: '#ece0fc', textSecondary: '#b098d0', textMuted: '#7a60a8', border: 'rgba(150,120,210,0.14)', surface: 'rgba(36,22,58,0.38)', surfaceRgb: '36,22,58', hover: 'rgba(140,100,200,0.08)', inputBg: 'rgba(18,10,30,0.50)', blur: '28px', saturate: '160%', shadow: '0 10px 38px rgba(20,10,30,0.40)' },
-    }
-
-    if (value && presets[value]) {
-      const p = presets[value]
+    // 从 colorThemes 数组读取预设值（唯一数据源）
+    const p = this.colorThemes.find(t => t.value === value)
+    if (value && p) {
       const root = document.documentElement
       root.style.setProperty('--qc-primary', p.primary)
       root.style.setProperty('--qc-primary-rgb', p.primaryRgb)
