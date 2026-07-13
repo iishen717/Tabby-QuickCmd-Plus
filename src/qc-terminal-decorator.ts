@@ -249,9 +249,10 @@ export class QuickCommandTerminalDecorator extends TerminalDecorator {
         toolbar.appendChild(btn)
       }
     } else {
-      // 无工具栏（cmd/powershell 等本地终端）→ 右上角浮动定位
+      // 无工具栏（cmd/powershell 等本地终端）→ 右上角浮动定位，检测 Host+ 按钮避免重叠
+      const hpBtn = hostEl.querySelector('[data-hp-entry="1"]')
       btn.style.position = 'absolute'
-      btn.style.top = '8px'
+      btn.style.top = hpBtn ? '36px' : '8px'
       btn.style.right = '8px'
       btn.style.zIndex = '99997'
       btn.style.border = '0.5px solid var(--qc-primary, #b4befe)'
