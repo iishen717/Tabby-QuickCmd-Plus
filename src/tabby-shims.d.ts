@@ -1,7 +1,7 @@
 /**
  * Tabby 模块类型声明（shim）
  * 功能描述：为 tabby-core、tabby-terminal、tabby-settings 提供最小类型声明
- * 创建人：DD1024z + Deepseek-V4-Flash
+ * 创建人：iishen717
  * 创建时间：2026-06-26
  */
 declare module 'tabby-core' {

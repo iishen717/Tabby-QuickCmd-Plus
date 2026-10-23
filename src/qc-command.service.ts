@@ -1,7 +1,7 @@
 /**
  * 快捷命令数据服务
  * 功能描述：命令 CRUD + 分组管理 + localStorage 持久化
- * 创建人：DD1024z + Deepseek-V4-Flash
+ * 创建人：iishen717
  * 创建时间：2026-06-26
  */
 

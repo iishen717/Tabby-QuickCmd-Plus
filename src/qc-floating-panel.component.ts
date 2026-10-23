@@ -1,7 +1,7 @@
 /**
  * QuickCommand+ 浮动面板组件
  * 功能描述：浮动在终端上的快捷命令面板，支持搜索/分组/执行/最小化/拖拽
- * 创建人：DD1024z + Deepseek-V4-Flash
+ * 创建人：iishen717
  * 创建时间：2026-06-26
  */
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core'

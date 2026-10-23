@@ -2,7 +2,7 @@
  * QuickCommand+ 设置面板
  * 功能描述：在 Tabby 设置左侧栏注册 QuickCmd+ 配置入口（语言、命令管理、数据备份）
  *   参考 SFTP+ 设置页的 UI 风格
- * 创建人：DD1024z + Deepseek-V4-Flash
+ * 创建人：iishen717
  * 创建时间：2026-06-27
  */
 import { Component, Injectable } from '@angular/core'

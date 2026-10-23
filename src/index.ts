@@ -1,9 +1,9 @@
 /**
  * QuickCommand+ 插件入口
  * 功能描述：注册 TerminalDecorator（浮动入口）+ 浮动面板 + 设置页
- * 创建人：DD1024z + Deepseek-V4-Flash
+ * 创建人：iishen717
  * 创建时间：2026-06-26
- * 修改人：DD1024z + Deepseek-V4-Flash
+ * 修改人：iishen717
  * 修改时间：2026-06-27
  *   模块启动时自动应用已保存的颜色主题
  */
