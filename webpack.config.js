@@ -1,8 +1,4 @@
 const path = require('path')
-const fs = require('fs')
-
-// Tabby 用户插件目录
-const tabbyPluginDir = 'C:/Users/iishen717/AppData/Roaming/tabby/plugins/node_modules/tabby-quick-command-plus/dist'
 
 module.exports = {
   target: 'node',
@@ -11,7 +7,7 @@ module.exports = {
   context: __dirname,
   mode: 'development',
   output: {
-    path: fs.existsSync(tabbyPluginDir) ? tabbyPluginDir : path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'dist'),
     filename: 'index.js',
     libraryTarget: 'commonjs2',
     devtoolModuleFilenameTemplate: 'webpack-tabby-quick-command-plus:///[resource-path]',
