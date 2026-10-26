@@ -21,36 +21,50 @@ Tabby 快捷命令管理插件。浮动面板 + 分组管理 + 多步执行，�
 
 ## 安装
 
-### 方式一：npm 安装
+> 需要 Tabby 1.0.163 或更高版本。
 
-```bash
-npm install tabby-quick-command-plus
+### 方式一：手动安装
+
+1. 下载本项目：
+
+   - GitHub 页面点击 **Code → Download ZIP**，解压
+   - 或 `git clone https://github.com/iishen717/Tabby-QuickCmd-Plus.git`
+
+2. 在 Tabby 插件目录下创建插件文件夹（文件夹名必须是 `tabby-quick-command-plus`，目录不存在时手动创建）：
+
 ```
-
-### 方式二：手动安装
-
-1. 将本项目复制到 Tabby 插件目录：
-
-```
-Windows: %APPDATA%/tabby/plugins/node_modules/tabby-quick-command-plus/
+Windows: %APPDATA%\tabby\plugins\node_modules\tabby-quick-command-plus\
 macOS:   ~/Library/Application Support/tabby/plugins/node_modules/tabby-quick-command-plus/
 Linux:   ~/.config/tabby/plugins/node_modules/tabby-quick-command-plus/
 ```
 
-2. 确保目录下包含 `package.json` 和 `dist/index.js` 两个文件。
+3. 把项目中的 `package.json` 和 `dist/index.js` 复制进去，最终结构为：
 
-3. 重启 Tabby。
+```
+tabby-quick-command-plus/
+├── package.json
+└── dist/
+    └── index.js
+```
 
-### 方式三：从源码构建
+4. 重启 Tabby。
+
+> **注意**：不要直接把解压出来的 `Tabby-QuickCmd-Plus-main` 文件夹放进 `node_modules`。Tabby 只识别以 `tabby-`（小写）开头的文件夹，文件夹名不对插件不会被加载。
+
+### 方式二：从源码构建
+
+需要先安装 [Node.js 18+](https://nodejs.org/)。
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/iishen717/Tabby-QuickCmd-Plus.git
 cd Tabby-QuickCmd-Plus
 npm install
 npm run build
 ```
 
-构建产物在 `dist/` 目录，将整个项目复制到上述插件目录即可。
+构建产物为 `dist/index.js`。然后按「方式一」的第 2、3 步，把 `package.json` 和 `dist/` 复制到 Tabby 插件目录，重启 Tabby。
+
+> `npm install` 会自动执行一次构建（`prepare` 脚本）；修改源码后运行 `npm run build` 重新构建。
 
 ## 使用
 

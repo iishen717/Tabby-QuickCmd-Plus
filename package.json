@@ -16,11 +16,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/10D24D/Tabby-QuickCmd-Plus.git"
+    "url": "git+https://github.com/iishen717/Tabby-QuickCmd-Plus.git"
   },
-  "homepage": "https://github.com/10D24D/Tabby-QuickCmd-Plus#readme",
+  "homepage": "https://github.com/iishen717/Tabby-QuickCmd-Plus#readme",
   "bugs": {
-    "url": "https://github.com/10D24D/Tabby-QuickCmd-Plus/issues"
+    "url": "https://github.com/iishen717/Tabby-QuickCmd-Plus/issues"
   },
   "dependencies": {},
   "devDependencies": {
