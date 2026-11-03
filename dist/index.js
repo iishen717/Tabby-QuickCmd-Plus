@@ -38,9 +38,10 @@ function resolveSteps(cmd) {
             steps = [{ text: cmd.text, delaySeconds: 0, type: 'command' }];
         else {
             const globalDelay = cmd.delaySeconds || 0;
+            // 旧版“步骤间延迟”映射为第一条之后各步骤的前置延迟，避免首条命令前多等
             steps = lines.map((line, i) => ({
                 text: line,
-                delaySeconds: i < lines.length - 1 ? globalDelay : 0,
+                delaySeconds: i > 0 ? globalDelay : 0,
                 type: 'command',
             }));
         }
@@ -589,6 +590,28 @@ let QuickCommandFloatingPanel = class QuickCommandFloatingPanel {
         this.cleanDrag();
         this.cleanResize();
     }
+    /**
+     * 阻止输入框/文本域里的按键冒泡到 document。
+     * Tabby 的全局热键过滤只看 input:focus，不排除 textarea:focus；
+     * 若不拦截，在步骤命令框按 Ctrl+V 会同时把剪贴板内容粘贴进终端。
+     */
+    onHostKeydown(event) {
+        if (this.isEditableTarget(event.target)) {
+            event.stopPropagation();
+        }
+    }
+    onHostPaste(event) {
+        if (this.isEditableTarget(event.target)) {
+            event.stopPropagation();
+        }
+    }
+    isEditableTarget(target) {
+        const el = target;
+        if (!el)
+            return false;
+        const tag = (el.tagName || '').toUpperCase();
+        return tag === 'INPUT' || tag === 'TEXTAREA' || el.isContentEditable;
+    }
     loadData() {
         this.svc.reload();
         this.commands = this.svc.getAll();
@@ -832,13 +855,27 @@ let QuickCommandFloatingPanel = class QuickCommandFloatingPanel {
         setTimeout(onDone, 100);
     }
     executeSteps(cmd, steps, idx, forceExecute = false) {
-        var _a, _b, _c, _d, _e, _f;
         if (this.destroyed)
             return;
         if (idx >= steps.length) {
             this.focusTerminal();
             return;
         }
+        const step = steps[idx];
+        // 延迟语义：先等待当前步骤的 delaySeconds，再执行当前步骤
+        // 例：步骤1 delay=2 → 2s 后执行命令1；步骤2 delay=3 → 命令1发送后再等 3s 执行命令2
+        const delay = Math.max(0, step.delaySeconds || 0);
+        if (delay > 0) {
+            setTimeout(() => this.executeStepNow(cmd, steps, idx, forceExecute), delay * 1000);
+        }
+        else {
+            this.executeStepNow(cmd, steps, idx, forceExecute);
+        }
+    }
+    executeStepNow(cmd, steps, idx, forceExecute = false) {
+        var _a, _b, _c, _d, _e, _f;
+        if (this.destroyed)
+            return;
         const step = steps[idx];
         const line = step.text;
         const isLast = idx === steps.length - 1;
@@ -848,15 +885,9 @@ let QuickCommandFloatingPanel = class QuickCommandFloatingPanel {
             // 延时执行：给 pty 行规程足够时间处理上一步的 \n
             // 防止 \x03 在同一个 n_tty_receive_buf 调用中覆盖 \n 的效果
             setTimeout(() => {
-                this.sendRawBreak(() => {
-                    const nextDelay = step.delaySeconds || 0;
-                    if (nextDelay > 0) {
-                        setTimeout(() => this.executeSteps(cmd, steps, idx + 1, forceExecute), nextDelay * 1000);
-                    }
-                    else {
-                        this.executeSteps(cmd, steps, idx + 1, forceExecute);
-                    }
-                });
+                if (this.destroyed)
+                    return;
+                this.sendRawBreak(() => this.executeSteps(cmd, steps, idx + 1, forceExecute));
             }, 150);
             return;
         }
@@ -899,19 +930,8 @@ let QuickCommandFloatingPanel = class QuickCommandFloatingPanel {
             }
             if (!sent && idx === 0)
                 console.warn('[QC+] No terminal input method available');
-            if (idx + 1 < steps.length) {
-                const nextDelay = step.delaySeconds || 0;
-                if (nextDelay > 0) {
-                    setTimeout(() => this.executeSteps(cmd, steps, idx + 1, forceExecute), nextDelay * 1000);
-                }
-                else {
-                    this.executeSteps(cmd, steps, idx + 1, forceExecute);
-                }
-            }
-            else {
-                // 所有步骤执行完毕，进入 idx>=length 守卫回收焦点
-                this.executeSteps(cmd, steps, idx + 1, forceExecute);
-            }
+            // 下一步在 executeSteps 入口等待它自己的前置延迟；最后一步进入 idx>=length 守卫回收焦点
+            this.executeSteps(cmd, steps, idx + 1, forceExecute);
         }
         catch (e) {
             console.warn('[QC+] executeSteps error', e);
@@ -943,7 +963,7 @@ let QuickCommandFloatingPanel = class QuickCommandFloatingPanel {
             if (this.editCmd.text) {
                 const lines = this.editCmd.text.split('\n').map((l) => l.trim()).filter((l) => l.length > 0);
                 const globalDelay = this.editCmd.delaySeconds || 0;
-                this.editCmd.steps = lines.map((line, i) => ({ text: line, delaySeconds: i < lines.length - 1 ? globalDelay : 0 }));
+                this.editCmd.steps = lines.map((line, i) => ({ text: line, delaySeconds: i > 0 ? globalDelay : 0 }));
             }
             else {
                 this.editCmd.steps = [{ text: '', delaySeconds: 0 }];
@@ -980,6 +1000,17 @@ let QuickCommandFloatingPanel = class QuickCommandFloatingPanel {
     set editCmdSteps(v) { this.editCmd.steps = v; }
     addStep() { this.editCmd.steps.push({ text: '', delaySeconds: 0, type: 'command' }); }
     addBreakStep() { this.editCmd.steps.push({ text: '', delaySeconds: 1, type: 'break' }); }
+    /** 切换命令/中断类型时同步该类型的默认延迟：命令 0s，中断 1s */
+    toggleStepType(step) {
+        if (step.type === 'break') {
+            step.type = 'command';
+            step.delaySeconds = 0;
+        }
+        else {
+            step.type = 'break';
+            step.delaySeconds = 1;
+        }
+    }
     autoGrow(event) {
         const ta = event.target;
         ta.style.height = ta.scrollHeight + 'px';
@@ -1421,6 +1452,18 @@ __decorate([
     (0,_angular_core__WEBPACK_IMPORTED_MODULE_0__.ViewChild)('listRef'),
     __metadata("design:type", _angular_core__WEBPACK_IMPORTED_MODULE_0__.ElementRef)
 ], QuickCommandFloatingPanel.prototype, "listRef", void 0);
+__decorate([
+    (0,_angular_core__WEBPACK_IMPORTED_MODULE_0__.HostListener)('keydown', ['$event']),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [KeyboardEvent]),
+    __metadata("design:returntype", void 0)
+], QuickCommandFloatingPanel.prototype, "onHostKeydown", null);
+__decorate([
+    (0,_angular_core__WEBPACK_IMPORTED_MODULE_0__.HostListener)('paste', ['$event']),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [ClipboardEvent]),
+    __metadata("design:returntype", void 0)
+], QuickCommandFloatingPanel.prototype, "onHostPaste", null);
 QuickCommandFloatingPanel = __decorate([
     (0,_angular_core__WEBPACK_IMPORTED_MODULE_0__.Component)({
         selector: 'qc-floating-panel',
@@ -1605,7 +1648,7 @@ QuickCommandFloatingPanel = __decorate([
             (dragstart)="onStepDragStart($event, i)"
             (dragend)="onStepDragEnd($event)" [title]="i18n.t('panel.drag_reorder')">&#x2261;</span>
           <span class="qc-step-type"
-            (click)="step.type = (step.type === 'break' ? 'command' : 'break'); $event.stopPropagation()"
+            (click)="toggleStepType(step); $event.stopPropagation()"
             [title]="step.type === 'break' ? i18n.t('settings.step_type_cmd') : i18n.t('settings.step_type_break')"
             [class.is-break]="step.type === 'break'">{{ step.type === 'break' ? '&#x26A0;' : '&#x25B6;' }}</span>
           <input class="qc-step-delay" type="number" min="0" max="60" step="0.2"
@@ -2455,8 +2498,8 @@ const translations = {
         'settings.append_cr': '发送并执行',
         'settings.params': '变量参数',
         'settings.pinned': '固定在快捷入口',
-        'settings.delay': '步骤延迟(秒)',
-        'settings.delay_hint': '延迟执行时间',
+        'settings.delay': '执行前延迟(秒)',
+        'settings.delay_hint': '执行该步骤前等待的秒数',
         'settings.delay_short': '延迟',
         'settings.add_step': '添加命令',
         'settings.add_break': '添加中断',
@@ -2538,8 +2581,8 @@ const translations = {
         'settings.append_cr': 'Send & Execute',
         'settings.params': 'Parameters',
         'settings.pinned': 'Pin to quick entry',
-        'settings.delay': 'Step delay (s)',
-        'settings.delay_hint': 'Delay execution time',
+        'settings.delay': 'Delay before step (s)',
+        'settings.delay_hint': 'Wait before this step (seconds)',
         'settings.delay_short': 'Delay',
         'settings.add_step': 'Add Command',
         'settings.add_break': 'Add Break',

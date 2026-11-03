@@ -7,7 +7,7 @@
 
 export interface CommandStep {
   text: string
-  /** 该步骤执行后的延迟（秒），0 表示无延迟立即执行下一步 */
+  /** 执行该步骤前等待的秒数；0 表示不等待，立即执行本步骤 */
   delaySeconds: number
   /** 步骤类型：'command' 发送命令文本，'break' 发送 Ctrl+C 中断 */
   type?: 'command' | 'break'
@@ -71,9 +71,10 @@ export function resolveSteps(cmd: QuickCommand): CommandStep[] {
     if (lines.length === 0) steps = [{ text: cmd.text, delaySeconds: 0, type: 'command' }]
     else {
       const globalDelay = cmd.delaySeconds || 0
+      // 旧版“步骤间延迟”映射为第一条之后各步骤的前置延迟，避免首条命令前多等
       steps = lines.map((line, i) => ({
         text: line,
-        delaySeconds: i < lines.length - 1 ? globalDelay : 0,
+        delaySeconds: i > 0 ? globalDelay : 0,
         type: 'command' as const,
       }))
     }
