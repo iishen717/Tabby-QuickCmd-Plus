@@ -12,7 +12,7 @@ import { QuickCommandI18nService } from './qc-i18n.service'
   selector: 'qc-floating-panel',
   template: `
     <!-- ====== 浮动面板主体 ====== -->
-    <div class="qc-panel"
+    <div class="qc-panel" #panelRef
       [class.minimized]="minimized"
       [class.resizing]="resizing !== null"
       [style.left.px]="panelX"
@@ -34,9 +34,11 @@ import { QuickCommandI18nService } from './qc-i18n.service'
         <span class="qc-title-btn qc-title-btn-mem"
               [title]="posMemoryOn ? i18n.t('panel.memory_on') : i18n.t('panel.memory_off')"
               [class.active]="posMemoryOn"
+              (mousedown)="$event.stopPropagation()"
               (click)="togglePosMemory(); $event.stopPropagation()">&#x2605;</span>
         <span class="qc-title-btn qc-title-btn-close"
               [title]="i18n.t('panel.close')"
+              (mousedown)="$event.stopPropagation()"
               (click)="doClose(); $event.stopPropagation()">&#x2715;</span>
       </div>
 
@@ -234,17 +236,26 @@ import { QuickCommandI18nService } from './qc-i18n.service'
 
     <!-- 编辑弹窗 — 分组下拉菜单 -->
     <div class="qc-filter-backdrop" *ngIf="showEditGroupDropdown" (click)="showEditGroupDropdown = false; $event.stopPropagation()" (mousedown)="$event.stopPropagation()"></div>
-    <div class="qc-filter-menu" *ngIf="showEditGroupDropdown" (mousedown)="$event.stopPropagation()"
+    <div class="qc-filter-menu qc-edit-group-menu" *ngIf="showEditGroupDropdown" (mousedown)="$event.stopPropagation()"
       [style.left.px]="editGroupMenuX" [style.top.px]="editGroupMenuY">
       <div class="qc-filter-option" [class.active]="!editCmd.group"
         (click)="editCmd.group = ''; showEditGroupDropdown = false">
-        <span class="qc-filter-opt-icon">&#x1F4C4;</span> {{ i18n.t('app.ungrouped') }}
+        <svg class="qc-filter-opt-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+          <polyline points="13 2 13 9 20 9"></polyline>
+        </svg>
+        {{ i18n.t('app.ungrouped') }}
       </div>
       <div class="qc-filter-opt-divider" *ngIf="allGroups.length > 0"></div>
       <div class="qc-filter-option" *ngFor="let g of allGroups"
         [class.active]="editCmd.group === g.name"
         (click)="editCmd.group = g.name; showEditGroupDropdown = false">
-        <span class="qc-filter-opt-icon">&#x1F4C1;</span> {{ g.name }}
+        <svg class="qc-filter-opt-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+        {{ g.name }}
       </div>
     </div>
 
@@ -481,6 +492,10 @@ import { QuickCommandI18nService } from './qc-i18n.service'
     .qc-filter-option:hover { background: var(--_hover); color: var(--_text); }
     .qc-filter-option.active { background: rgba(var(--_primary-rgb), 0.12); color: var(--_primary); font-weight: 600; }
     .qc-filter-opt-icon { font-size: 0.85em; flex-shrink: 0; opacity: 0.6; }
+    .qc-filter-opt-svg { width: 13px; height: 13px; flex-shrink: 0; opacity: 0.75; }
+    /* 编辑弹窗的分组下拉：去掉滚动条，滑块不再破坏圆角 */
+    .qc-edit-group-menu { scrollbar-width: none; -ms-overflow-style: none; }
+    .qc-edit-group-menu::-webkit-scrollbar { display: none; width: 0; height: 0; }
     .qc-filter-opt-divider { height: 1px; margin: 4px 8px; background: var(--_border); }
     .qc-filter-clear-btn {
       width: 18px; height: 18px;
@@ -980,6 +995,7 @@ import { QuickCommandI18nService } from './qc-i18n.service'
 })
 export class QuickCommandFloatingPanel implements OnInit, OnDestroy {
   @ViewChild('listRef') listRef!: ElementRef
+  @ViewChild('panelRef') panelRef!: ElementRef
 
   svc = new QuickCommandService()
   i18n = new QuickCommandI18nService()
@@ -1030,7 +1046,7 @@ export class QuickCommandFloatingPanel implements OnInit, OnDestroy {
   }
 
   get displayGroups(): QuickCommandGroup[] {
-    return this.groups.filter(g => {
+    const groups = this.groups.filter(g => {
       if (this.filterGroup === '__ungrouped__') {
         if (g.name !== '') return false
       } else if (this.filterGroup) {
@@ -1042,6 +1058,11 @@ export class QuickCommandFloatingPanel implements OnInit, OnDestroy {
       }
       return true
     })
+    // 搜索时临时展开有命中的分组，不改动持久化的展开状态
+    if (this.searchText && this.searchText.trim()) {
+      return groups.map(g => ({ ...g, expanded: true }))
+    }
+    return groups
   }
 
   get selectedCount(): number {
@@ -1057,9 +1078,39 @@ export class QuickCommandFloatingPanel implements OnInit, OnDestroy {
 
   applyPositionMemory(): void {
     this.initTerminalInfo()
-    this.posMemoryOn = this.profileId ? this.svc.hasPositionMemory(this.profileId) : false
-    this.restorePosition()
+    if (!this.profileId) this.profileId = 'default'
+    this.posMemoryOn = this.svc.hasPositionMemory(this.profileId)
     this.loadData()
+    if (this.posMemoryOn) {
+      this.restorePosition()
+    } else {
+      // 关闭位置记忆：使用默认布局，不恢复位置/分组/筛选/滚动
+      this.svc.collapseAllGroups()
+      this.groups = this.svc.getGroups()
+      this.filterGroup = ''
+      this.centerPanel()
+    }
+    this.onSearch()
+  }
+
+  /** 位置记忆关闭时，面板默认居中显示 */
+  private centerPanel(): void {
+    setTimeout(() => {
+      try {
+        const panelEl = this.panelRef?.nativeElement as HTMLElement | null
+        const width = panelEl?.offsetWidth || this.panelWidth || 320
+        const height = panelEl?.offsetHeight || this.panelHeight || 420
+        if (this.terminalRef) {
+          const hostEl = this.terminalRef?.element?.nativeElement as HTMLElement | null
+          if (!hostEl) return
+          this.panelX = Math.max(4, Math.round((hostEl.clientWidth - width) / 2))
+          this.panelY = Math.max(4, Math.round((hostEl.clientHeight - height) / 2))
+        } else {
+          this.panelX = Math.max(4, Math.round((window.innerWidth - width) / 2))
+          this.panelY = Math.max(4, Math.round((window.innerHeight - height) / 2))
+        }
+      } catch { /* ignore */ }
+    }, 0)
   }
 
   private initTerminalInfo(): void {
@@ -1820,8 +1871,7 @@ export class QuickCommandFloatingPanel implements OnInit, OnDestroy {
         return
       }
     }
-    const saved = this.svc.getPanelPosition()
-    if (saved.x !== 20 || saved.y !== 60) { this.panelX = Math.max(0, saved.x); this.panelY = Math.max(0, saved.y) }
+    // 没有开启记忆：保留入口/居中定位的默认位置，只做边界修正
     setTimeout(() => {
       const hostEl = this.terminalRef?.element?.nativeElement as HTMLElement | null
       if (hostEl) {
@@ -1853,7 +1903,7 @@ export class QuickCommandFloatingPanel implements OnInit, OnDestroy {
   }
 
   togglePosMemory(): void {
-    if (!this.profileId) return
+    if (!this.profileId) this.profileId = 'default'
     this.posMemoryOn = this.svc.togglePositionMemory(this.profileId)
     if (this.posMemoryOn) {
       const groupExp: Record<string, boolean> = {}

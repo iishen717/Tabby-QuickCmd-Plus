@@ -287,6 +287,15 @@ export class QuickCommandService {
     return this.groups
   }
 
+  /** 关闭位置记忆时使用默认布局：所有分组折叠 */
+  collapseAllGroups(): void {
+    let changed = false
+    for (const g of this.groups) {
+      if (g.expanded) { g.expanded = false; changed = true }
+    }
+    if (changed) this.saveGroups()
+  }
+
   toggleGroupExpanded(name: string): void {
     const g = this.groups.find(gr => gr.name === name)
     if (g) g.expanded = !g.expanded

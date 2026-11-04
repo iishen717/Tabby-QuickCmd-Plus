@@ -244,6 +244,18 @@ class QuickCommandService {
         this.saveGroups();
         return this.groups;
     }
+    /** 关闭位置记忆时使用默认布局：所有分组折叠 */
+    collapseAllGroups() {
+        let changed = false;
+        for (const g of this.groups) {
+            if (g.expanded) {
+                g.expanded = false;
+                changed = true;
+            }
+        }
+        if (changed)
+            this.saveGroups();
+    }
     toggleGroupExpanded(name) {
         const g = this.groups.find(gr => gr.name === name);
         if (g)
@@ -526,7 +538,7 @@ let QuickCommandFloatingPanel = class QuickCommandFloatingPanel {
         return this.groups;
     }
     get displayGroups() {
-        return this.groups.filter(g => {
+        const groups = this.groups.filter(g => {
             if (this.filterGroup === '__ungrouped__') {
                 if (g.name !== '')
                     return false;
@@ -541,6 +553,11 @@ let QuickCommandFloatingPanel = class QuickCommandFloatingPanel {
             }
             return true;
         });
+        // 搜索时临时展开有命中的分组，不改动持久化的展开状态
+        if (this.searchText && this.searchText.trim()) {
+            return groups.map(g => ({ ...g, expanded: true }));
+        }
+        return groups;
     }
     get selectedCount() {
         return this.filteredCommands.length;
@@ -553,9 +570,44 @@ let QuickCommandFloatingPanel = class QuickCommandFloatingPanel {
     }
     applyPositionMemory() {
         this.initTerminalInfo();
-        this.posMemoryOn = this.profileId ? this.svc.hasPositionMemory(this.profileId) : false;
-        this.restorePosition();
+        if (!this.profileId)
+            this.profileId = 'default';
+        this.posMemoryOn = this.svc.hasPositionMemory(this.profileId);
         this.loadData();
+        if (this.posMemoryOn) {
+            this.restorePosition();
+        }
+        else {
+            // 关闭位置记忆：使用默认布局，不恢复位置/分组/筛选/滚动
+            this.svc.collapseAllGroups();
+            this.groups = this.svc.getGroups();
+            this.filterGroup = '';
+            this.centerPanel();
+        }
+        this.onSearch();
+    }
+    /** 位置记忆关闭时，面板默认居中显示 */
+    centerPanel() {
+        setTimeout(() => {
+            var _a, _b, _c;
+            try {
+                const panelEl = (_a = this.panelRef) === null || _a === void 0 ? void 0 : _a.nativeElement;
+                const width = (panelEl === null || panelEl === void 0 ? void 0 : panelEl.offsetWidth) || this.panelWidth || 320;
+                const height = (panelEl === null || panelEl === void 0 ? void 0 : panelEl.offsetHeight) || this.panelHeight || 420;
+                if (this.terminalRef) {
+                    const hostEl = (_c = (_b = this.terminalRef) === null || _b === void 0 ? void 0 : _b.element) === null || _c === void 0 ? void 0 : _c.nativeElement;
+                    if (!hostEl)
+                        return;
+                    this.panelX = Math.max(4, Math.round((hostEl.clientWidth - width) / 2));
+                    this.panelY = Math.max(4, Math.round((hostEl.clientHeight - height) / 2));
+                }
+                else {
+                    this.panelX = Math.max(4, Math.round((window.innerWidth - width) / 2));
+                    this.panelY = Math.max(4, Math.round((window.innerHeight - height) / 2));
+                }
+            }
+            catch ( /* ignore */_d) { /* ignore */ }
+        }, 0);
     }
     initTerminalInfo() {
         var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l;
@@ -1385,11 +1437,7 @@ let QuickCommandFloatingPanel = class QuickCommandFloatingPanel {
                 return;
             }
         }
-        const saved = this.svc.getPanelPosition();
-        if (saved.x !== 20 || saved.y !== 60) {
-            this.panelX = Math.max(0, saved.x);
-            this.panelY = Math.max(0, saved.y);
-        }
+        // 没有开启记忆：保留入口/居中定位的默认位置，只做边界修正
         setTimeout(() => {
             var _a, _b;
             const hostEl = (_b = (_a = this.terminalRef) === null || _a === void 0 ? void 0 : _a.element) === null || _b === void 0 ? void 0 : _b.nativeElement;
@@ -1427,7 +1475,7 @@ let QuickCommandFloatingPanel = class QuickCommandFloatingPanel {
     togglePosMemory() {
         var _a, _b;
         if (!this.profileId)
-            return;
+            this.profileId = 'default';
         this.posMemoryOn = this.svc.togglePositionMemory(this.profileId);
         if (this.posMemoryOn) {
             const groupExp = {};
@@ -1453,6 +1501,10 @@ __decorate([
     __metadata("design:type", _angular_core__WEBPACK_IMPORTED_MODULE_0__.ElementRef)
 ], QuickCommandFloatingPanel.prototype, "listRef", void 0);
 __decorate([
+    (0,_angular_core__WEBPACK_IMPORTED_MODULE_0__.ViewChild)('panelRef'),
+    __metadata("design:type", _angular_core__WEBPACK_IMPORTED_MODULE_0__.ElementRef)
+], QuickCommandFloatingPanel.prototype, "panelRef", void 0);
+__decorate([
     (0,_angular_core__WEBPACK_IMPORTED_MODULE_0__.HostListener)('keydown', ['$event']),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [KeyboardEvent]),
@@ -1469,7 +1521,7 @@ QuickCommandFloatingPanel = __decorate([
         selector: 'qc-floating-panel',
         template: `
     <!-- ====== 浮动面板主体 ====== -->
-    <div class="qc-panel"
+    <div class="qc-panel" #panelRef
       [class.minimized]="minimized"
       [class.resizing]="resizing !== null"
       [style.left.px]="panelX"
@@ -1491,9 +1543,11 @@ QuickCommandFloatingPanel = __decorate([
         <span class="qc-title-btn qc-title-btn-mem"
               [title]="posMemoryOn ? i18n.t('panel.memory_on') : i18n.t('panel.memory_off')"
               [class.active]="posMemoryOn"
+              (mousedown)="$event.stopPropagation()"
               (click)="togglePosMemory(); $event.stopPropagation()">&#x2605;</span>
         <span class="qc-title-btn qc-title-btn-close"
               [title]="i18n.t('panel.close')"
+              (mousedown)="$event.stopPropagation()"
               (click)="doClose(); $event.stopPropagation()">&#x2715;</span>
       </div>
 
@@ -1691,17 +1745,26 @@ QuickCommandFloatingPanel = __decorate([
 
     <!-- 编辑弹窗 — 分组下拉菜单 -->
     <div class="qc-filter-backdrop" *ngIf="showEditGroupDropdown" (click)="showEditGroupDropdown = false; $event.stopPropagation()" (mousedown)="$event.stopPropagation()"></div>
-    <div class="qc-filter-menu" *ngIf="showEditGroupDropdown" (mousedown)="$event.stopPropagation()"
+    <div class="qc-filter-menu qc-edit-group-menu" *ngIf="showEditGroupDropdown" (mousedown)="$event.stopPropagation()"
       [style.left.px]="editGroupMenuX" [style.top.px]="editGroupMenuY">
       <div class="qc-filter-option" [class.active]="!editCmd.group"
         (click)="editCmd.group = ''; showEditGroupDropdown = false">
-        <span class="qc-filter-opt-icon">&#x1F4C4;</span> {{ i18n.t('app.ungrouped') }}
+        <svg class="qc-filter-opt-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+          <polyline points="13 2 13 9 20 9"></polyline>
+        </svg>
+        {{ i18n.t('app.ungrouped') }}
       </div>
       <div class="qc-filter-opt-divider" *ngIf="allGroups.length > 0"></div>
       <div class="qc-filter-option" *ngFor="let g of allGroups"
         [class.active]="editCmd.group === g.name"
         (click)="editCmd.group = g.name; showEditGroupDropdown = false">
-        <span class="qc-filter-opt-icon">&#x1F4C1;</span> {{ g.name }}
+        <svg class="qc-filter-opt-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+        {{ g.name }}
       </div>
     </div>
 
@@ -1938,6 +2001,10 @@ QuickCommandFloatingPanel = __decorate([
     .qc-filter-option:hover { background: var(--_hover); color: var(--_text); }
     .qc-filter-option.active { background: rgba(var(--_primary-rgb), 0.12); color: var(--_primary); font-weight: 600; }
     .qc-filter-opt-icon { font-size: 0.85em; flex-shrink: 0; opacity: 0.6; }
+    .qc-filter-opt-svg { width: 13px; height: 13px; flex-shrink: 0; opacity: 0.75; }
+    /* 编辑弹窗的分组下拉：去掉滚动条，滑块不再破坏圆角 */
+    .qc-edit-group-menu { scrollbar-width: none; -ms-overflow-style: none; }
+    .qc-edit-group-menu::-webkit-scrollbar { display: none; width: 0; height: 0; }
     .qc-filter-opt-divider { height: 1px; margin: 4px 8px; background: var(--_border); }
     .qc-filter-clear-btn {
       width: 18px; height: 18px;
@@ -4195,11 +4262,13 @@ let QuickCommandTerminalDecorator = QuickCommandTerminalDecorator_1 = class Quic
                 cmp.panelX = Math.round((window.innerWidth - 340) / 2);
                 cmp.panelY = Math.round((window.innerHeight - 420) / 2);
                 cmp.terminalRef = null;
-                cmp.profileId = '';
+                cmp.profileId = 'standalone';
                 cmp.onClose = () => {
                     QuickCommandTerminalDecorator_1.closeStandalonePanel();
                 };
                 appRef.attachView(cmpRef.hostView);
+                cmpRef.changeDetectorRef.detectChanges();
+                cmp.applyPositionMemory();
                 cmpRef.changeDetectorRef.detectChanges();
                 panelHost.addEventListener('mousedown', (ev) => ev.stopPropagation());
                 panelHost.addEventListener('click', (ev) => ev.stopPropagation());

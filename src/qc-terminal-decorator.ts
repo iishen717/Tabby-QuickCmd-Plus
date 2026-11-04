@@ -549,13 +549,15 @@ export class QuickCommandTerminalDecorator extends TerminalDecorator {
         cmp.panelX = Math.round((window.innerWidth - 340) / 2)
         cmp.panelY = Math.round((window.innerHeight - 420) / 2)
         cmp.terminalRef = null
-        cmp.profileId = ''
+        cmp.profileId = 'standalone'
 
         cmp.onClose = () => {
           QuickCommandTerminalDecorator.closeStandalonePanel()
         }
 
         appRef.attachView(cmpRef.hostView)
+        cmpRef.changeDetectorRef.detectChanges()
+        cmp.applyPositionMemory()
         cmpRef.changeDetectorRef.detectChanges()
 
         panelHost.addEventListener('mousedown', (ev: MouseEvent) => ev.stopPropagation())
